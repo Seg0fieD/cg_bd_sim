@@ -1,0 +1,43 @@
+box:
+  length: 20.0
+
+simulation:
+  n_particles: 1000
+  dt: 0.001
+  n_steps: 10000
+  diffusion: 1.0
+  seed: 77
+
+particles:
+  sigma: 1.0
+  k_rep: 100.0
+  kT: 1.0
+
+species:
+  - name: A
+    sigma: 1.0
+    diffusion: 1.0
+    fraction: 0.5
+  - name: B
+    sigma: 1.0
+    diffusion: 1.0
+    fraction: 0.5
+
+attractions:
+  - species_a: A
+    species_b: B
+    epsilon: 2.0
+    cutoff: 2.0
+
+reactions:
+  - species_a: A
+    species_b: B
+    k_on: 5.0
+    k_off: 0.5
+    r_bind: 1.2
+    k_bond: 200.0
+    r_bond: 1.0
+    max_partners: 0                     # 0 = unlimited = gel
+
+output:
+  save_entry: 100
