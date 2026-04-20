@@ -1,0 +1,8 @@
+numpy
+scipy
+pyyaml
+h5py
+matplotlib
+pyvista
+snakemake
+pytest
