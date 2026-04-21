@@ -1,4 +1,4 @@
-# Hold the simulation array | instead of per-particel objects , using an array 
+# SimulationState: mutable arrays and history carried through the run loop.
 
 from dataclasses import dataclass, field
 import numpy as np

@@ -1,7 +1,7 @@
-# Handles binding/unbinding.
-# Two modes:
-# A. Pure force-based sticking
-# B. Rule-based reaction
+# Rule-based binding and unbinding of particle pairs.
+# Binding: compatible A-B pairs within r_bind bind with probability k_on * dt.
+# Unbinding: each bound pair dissolves with probability k_off * dt.
+# `max_partners` caps how many bonds a single particle can hold simultaneously.
 
 
 import numpy as np
@@ -10,6 +10,8 @@ from .state import SimulationState
 
 
 def _canonical(i : int, j: int ) -> tuple[int, int]:
+    """Return pair in sorted order so (i, j) and (j, i) map to the same key."""
+
     return (i, j) if i < j else (j, i)
 
 def attempt_binding(
@@ -22,7 +24,8 @@ def attempt_binding(
         rng: np.random.Generator,
         ) -> None: 
     """
-    For each compatible A-B pair within r_bind that is NOT already bound, bind with probablity k_on * dt. 
+    Attempt to bind compatible unbound pairs within r_bind(that is NOT already bound), respecting max_partners;
+    bind probablity k_on * dt.
     """
 
     if len(pairs) == 0 or not rules:
@@ -30,44 +33,7 @@ def attempt_binding(
     
     dist = np.linalg.norm(deltas, axis = 1)
 
-    # - x - x - x - x - x - x - x - x - x - x
-    # particle already bound (on either side) are locked - one-partner binding 
-    # locked = set()
-    # for (a, b) in state.bound_pairs:
-    #     locked.add(a)
-    #     locked.add(b)
-
-    # for rule in rules:
-    #     id_a = species_names.index(rule.species_a)
-    #     id_b = species_names.index(rule.species_b)
-
-    #     si = state.species_ids[pairs[:, 0]]
-    #     sj = state.species_ids[pairs[:, 1]]
-
-    #     mask = (
-    #         ((si == id_a) & (sj == id_b)) |
-    #         ((si == id_b) & (sj == id_a))
-    #     ) & (dist < rule.r_bind)
-
-    #     if not np.any(mask):
-    #         continue
-
-    #     candidates = pairs[mask]
-    #     p_bind = rule.k_on * dt
-
-    #     for (i, j ) in candidates:
-    #         i, j = int(i), int(j)
-
-    #         if i in locked or j in locked:
-    #             continue
-
-    #         if rng.random() < p_bind:
-    #             state.bound_pairs.add(_canonical(i, j))
-    #             locked.add(i)
-    #             locked.add(j)
-
-    # - x - x - x - x - x - x - x - x - x - x
-    # count existing partners per particle 
+    # current bond count per particle, based on max_partners
     partner_count: dict[int, int] = {}
     for (a, b) in state.bound_pairs:
         partner_count[a] = partner_count.get(a, 0) + 1
@@ -114,13 +80,13 @@ def attempt_unbinding(
         rng: np.random.Generator,
         ) -> None:
     """
-    For each bound pair, unbind with probablity k_off * dt (using the rule matching its species pair).
+    Attempt to unbind each bound pair using the probablity k_off * dt of its matching rule.
     """
 
     if not state.bound_pairs or not rules:
         return
     
-    # build species-pair -> k_off lookup
+    # species-pair -> k_off lookup (unordered pair as frozenset)
     koff_lookup: dict[frozenset[int], float] = {}
     for rule in rules:
         id_a = species_names.index(rule.species_a)

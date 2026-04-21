@@ -1,9 +1,9 @@
-# Small dataclasses for static metadata only.
+# Dataclasses for static metadata
 
 from dataclasses import dataclass
 
 # Species — static per-type physical properties
-@dataclass(frozen = True)  # frozen True means these are immutable once created — correct for static metadata.
+@dataclass(frozen = True)  
 class Species:
     name: str
     sigma: float            # particle diameter
@@ -20,7 +20,7 @@ class AttractionRule:
     cutoff: float           # range of attraction
 
 
-# Reaction Rule - rule-based binding with harmonic bond while bound 
+# Reaction Rule - rule-based binding with harmonic bond under bounded condition
 @dataclass(frozen = True)
 class ReactionRule:
     species_a: str 

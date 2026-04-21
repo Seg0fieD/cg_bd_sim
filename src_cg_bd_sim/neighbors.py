@@ -1,4 +1,4 @@
-# Neighbor list / near-pair detection.
+# Neighbor-pair detection via KDTree with periodic boundaries.
 
 import numpy as np 
 from scipy.spatial import KDTree
@@ -26,8 +26,8 @@ def compute_displacement_vectors(
         box_length: float,
         ) -> np.ndarray:
     """
-    Return displacement vectors r_ij = r_j - r_i with minimum image covertion.
-    Shape: (n_pairs, 3)
+    Return displacement vectors r_ij = r_j - r_i with minimum image convention.
+
     """
     delta = positions[pairs[:, 1]] - positions[pairs[:, 0]]
 

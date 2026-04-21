@@ -1,4 +1,4 @@
-# orchestrate the run loop
+# Run loop: neighbor list -> forces -> reactions -> Brownian step -> snapshot.
 
 import numpy as np 
 from .config import SimulationConfig
@@ -23,7 +23,7 @@ class Simulation:
         self.state  = state
         self.rng    = np.random.default_rng(cfg.seed)
 
-        # build species name list and attractive rules 
+        # species name list and attractive rules 
         self.species_names    = [s["name"] for s in cfg.species] if cfg.species else ["A"]
         self.attraction_rules = [
             AttractionRule(
@@ -52,6 +52,7 @@ class Simulation:
 
     def run(self) -> None:
         for step in range(self.cfg.n_steps):
+            # neighbor cutoff must cover the longest interaction range
             cutoff = max(
                 self.cfg.sigma * 2.0,
                 *[r.cutoff for r in self.attraction_rules] or [0.0],
@@ -59,7 +60,7 @@ class Simulation:
             )
             pairs = find_neighbor_pairs(
                 positions  = self.state.positions,
-                cutoff     = cutoff,  # cutoff = 1 diameter
+                cutoff     = cutoff,           
                 box_length = self.cfg.box_length,
             )
             
@@ -82,7 +83,8 @@ class Simulation:
                                 rules         = self.attraction_rules,
                                 species_names = self.species_names,
                     )
-            # bond forces (from previously bound pairs — independent of neighbor list)
+            # bond forces run over previously bound pairs, independent of the
+            # neighbor list — a stretched bond outside the cutoff still pulls.
             for rule in self.reaction_rules:
                 forces += harmonic_bond_force(
                     positions    = self.state.positions,
@@ -130,7 +132,7 @@ class Simulation:
                 self.state.saved_positions.append(self.state.positions.copy())
                 self.state.saved_bound_pairs.append(set(self.state.bound_pairs))
                 
-                # total potential energy at this snapshot
+                # compute total potential energy 
                 E_rep = (pair_energy_repulsion(pairs, deltas, self.cfg.sigma, self.cfg.k_rep)
                     if len(pairs) > 0 and deltas is not None
                     else 0.0)

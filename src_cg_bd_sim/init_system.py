@@ -1,3 +1,6 @@
+# Build the initial SimulationState: 
+# random positions and species assignment by fraction.
+
 import numpy as np
 from .config import SimulationConfig
 from .state import SimulationState

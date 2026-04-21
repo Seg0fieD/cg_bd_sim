@@ -1,23 +1,17 @@
-# =======================================================================================
-# Observables — pure functions on saved trajectory data.
-# Chunk A: time-series observables (MSD, bound fraction, position autocorrelation)
-# =======================================================================================
+# Pure functions on saved trajectory data: dynamics, structure, clusters.
 
 import numpy as np
 from scipy.sparse import csr_matrix
 from scipy.sparse.csgraph import connected_components
 
-# unwrap positions in post-processing using minimum-image of frame-to-frame displacements. 
-# As long as no particle moves more than L/2 per saved snapshot 
-# (expected ~0.14 per step, L/2 = 5 — safe), unwrapping is exact.
+
 def unwrap_positions(
         saved_positions: list[np.ndarray],
         box_length: float,
         ) -> list[np.ndarray]:
     """
-    Undo PBC wrapping for MSD calculation. 
-    Assumes frame-to-frame displacement < L/2 (no particle moves more 
-    than half a box between save snapshots)
+    Undo PBC wrapping for MSD calculation.
+    Valid as long as no particle moves more than L/2 between saved snapshots.
     """
     if len(saved_positions) == 0: 
         return []
@@ -37,8 +31,7 @@ def compute_msd(
     """ Mean Square Displacement over time.
     MSD(t) = <|r(t) - r(0)|^2> averaged over all particles.
 
-    Note: assume positions are NOT wrapped by PBC (ot that displacement are small relative to box). For long runs with PBC, 
-    use unwrapped positions.
+    Assumption - positions are NOT wrapped by PBC (displacement are small relative to box). 
 
     Parameters
     ----------
@@ -62,8 +55,8 @@ def compute_bound_fraction(
         n_particles: int,
         ) -> np.ndarray:
     """
-    fraction of particles that are bound at each snapshot.
-    Each bound pair locks 2 particles -> fraction = 2 * n_pairs / n_particles.
+    Fraction of particles bound at each snapshot (each pair locks 2 particles).
+    fraction = 2 * n_pairs / n_particles.
 
     Return
     ------
@@ -76,24 +69,21 @@ def compute_bound_fraction(
     
     return frac
 
-
-# uses centered positions (drift-subtracted). For overdamped BD with no forces, expect fast decay. 
-# With attraction/bonds, expect slower decay → shows caging.
 def compute_position_autocorrelation(
         saved_positions: list[np.ndarray],
         ) -> np.ndarray:                                        
     """
-    Position autocorrelation: C(t) =<(r(t) - r(0)) . (r(0) - <r>)> style metric.
+    Drift-subtracted position(centered) autocorrelation:
 
-    Here we use the normalized displacement autocorrelation:
-         C(t) = <dr(t) . dr(0)> / <dr(0) . dr(0)>
-            where dr(t) = r(t) - <r>_t (per-frame mean subtracted).
+            C(t) = <dr(t) . dr(0)> / <dr(0) . dr(0)>,
+            -- where dr(t) = r(t) - <r>_t (per-frame mean subtracted).
 
-    For overdamped Browian motion, this should decay rapidly (memoryless)
+    For overdamped BD with no forces, expect fast decay.
+    With attraction/bonds, expect slower decay → shows caging.
 
-    Returns
-    -------
-    C : (n_snapshots,) array, C[0] = 1.0
+        Returns
+        -------
+        C : (n_snapshots,) array, C[0] = 1.0
     """
 
     n_snap = len(saved_positions)
@@ -114,9 +104,6 @@ def compute_position_autocorrelation(
 
     return C 
 
-# =======================================================================================
-# Chunk B: structure observables (g(r) per species pair, S(q))
-# =======================================================================================
 def compute_rdf(
         positions: np.ndarray,
         species_ids: np.ndarray,
@@ -159,23 +146,23 @@ def compute_rdf(
         return r_centers, np.zeros(n_bins)
     
     # pairwise distance with minimum image 
-    pos_a   = positions[idx_a]                            # (n_a, 3)
-    pos_b   = positions[idx_b]                            # (n_b, 3)
-    delta   = pos_a[:, None, :] - pos_b[None, :, : ]      # (n_a, n_b, 3)  
+    pos_a   = positions[idx_a]                            
+    pos_b   = positions[idx_b]                            
+    delta   = pos_a[:, None, :] - pos_b[None, :, : ]       
     delta  -= box_length * np.round(delta / box_length)
-    dist    = np.linalg.norm(delta, axis=2)             # (n_a, n_b)   
+    dist    = np.linalg.norm(delta, axis=2)               
 
 
     # exclude self-pairs when a == b
     if species_a == species_b:
         np.fill_diagonal(dist, np.inf)
 
-    # histogram
+    
     mask = (dist > 0) & (dist < r_max)
     hist, edges = np.histogram(dist[mask], bins = n_bins, range = (0.0, r_max))
     r_centers = 0.5 * (edges[:-1] + edges[1:])
 
-    # Normaliztion; shell volume * bulk density * count of reference particles
+    # Normaliztion (shell volume * bulk density * count of reference particles)
     dr = edges[1] - edges[0]
     shell_vol = 4.0 * np.pi * r_centers ** 2 * dr
     volume = box_length ** 3 
@@ -183,7 +170,7 @@ def compute_rdf(
 
 
     if species_a == species_b:
-        # each pair counted twice in the cress matrix
+        # each pair counted twice in the  matrix
         norm = n_a * bulk_density_b * shell_vol
 
     else:
@@ -200,12 +187,12 @@ def compute_structure_factor(
         q_max: float | None = None,
         ) -> tuple[np.ndarray, np.ndarray]:
     """
-    Static structure factor S(q) computed on a grid of q-vector compatible with 
+    Static structure factor S(q) computed on a grid of q-vector compatible with
     PBC: q = (2* pi/L) * (nx, ny, nz)
-    
+
     S(q) = (1/N) * |sum_j exp(-i q.r_j)|^2
 
-    Angular-averaged (binned by |q|).
+    Result is angular-averaged (binned by |q|).
 
     Parameter
     ---------
@@ -218,7 +205,7 @@ def compute_structure_factor(
     Return
     ------
     q_centers  : (n_bins,) array of |q| bin centers
-    S          : (n_bins,) angular_averaged S(q) 
+    S          : (n_bins,) angular_averaged S(q)
     """
 
     n = positions.shape[0]
@@ -227,10 +214,10 @@ def compute_structure_factor(
     # integer grid of q-vectors (skip origin)
     ns          = np.arange(-n_q, n_q + 1)
     nx, ny, nz  = np.meshgrid(ns, ns, ns, indexing = "ij")      
-    q_int       = np.stack([nx.ravel(), ny.ravel(), nz.ravel()], axis = 1)              # (M, 3)
-    q_int       = q_int[np.any(q_int != 0, axis = 1)]                                   # drop (0, 0, 0)
-    q_vecs      = two_pi_L * q_int                                                      # (M, 3)
-    q_mag       = np.linalg.norm(q_vecs, axis = 1)                                      # (M, )
+    q_int       = np.stack([nx.ravel(), ny.ravel(), nz.ravel()], axis = 1)              
+    q_int       = q_int[np.any(q_int != 0, axis = 1)]                                   
+    q_vecs      = two_pi_L * q_int                                                      
+    q_mag       = np.linalg.norm(q_vecs, axis = 1)                                      
 
 
     if q_max is None:
@@ -241,10 +228,9 @@ def compute_structure_factor(
     q_mag = q_mag[keep]
 
     # S(q) per q-vector 
-    # phases: (M, N) = q_vecs @ positions.T 
-    phase   = q_vecs @ positions.T                                                      # (M, N)
-    rho_q   = np.sum(np.exp(-1j * phase), axis = 1)                                     # (M, )
-    S_per_q = (rho_q.real**2 + rho_q.imag**2) / n                                    # (M, )
+    phase   = q_vecs @ positions.T                                                     
+    rho_q   = np.sum(np.exp(-1j * phase), axis = 1)                                     
+    S_per_q = (rho_q.real**2 + rho_q.imag**2) / n                                    
 
     # angular average into bins
     n_bins  = min(40, int(np.ceil(q_max / two_pi_L)))
@@ -261,14 +247,6 @@ def compute_structure_factor(
 
     q_centers = 0.5 * (bins[:-1] + bins[1:])
     return q_centers, S
-
-# =======================================================================================
-# Chunk C: cluster & bond observables
-#   - compute_cluster_sizes
-#   - compute_cluster_lifetimes
-#   - compute_bond_lifetimes
-#   - compute_msd_split_bound_free
-# =======================================================================================
 
 def _clusters_from_pairs(
         bound_pairs: set[tuple[int, int]],
@@ -297,7 +275,7 @@ def compute_cluster_sizes(
     n_particles: int,
     ) -> np.ndarray:
     """
-    Histogram of ccluster sizes at single snapshot.
+    Histogram of cluster sizes at single snapshot.
     Monomers (size - 1) included.
 
     Returns
@@ -349,7 +327,7 @@ def compute_cluster_lifetimes(
         frame_clusters.append(clusters)
 
     # track: for each cluster currently alive, how many frames it has survived 
-    alive: dict[frozenset[int], int] = {}               # cluster -> frames alive
+    alive: dict[frozenset[int], int] = {}               
     finished_lifetimes: list[int] = []    
 
     for t, clusters in enumerate(frame_clusters):
@@ -395,7 +373,7 @@ def compute_bond_lifetimes(
     if len(saved_bound_pairs) == 0:
         return np.zeros(0)
     
-    active: dict[tuple[int, int], int] = {}                 # pair -> frames bound so far 
+    active: dict[tuple[int, int], int] = {}                 
     finished: list[int] = []
     
     for pairs in saved_bound_pairs:

@@ -1,3 +1,5 @@
+# Load YAML experiment file into a SimulationConfig dataclass.
+
 from dataclasses import dataclass, field
 from pathlib import Path
 import yaml
@@ -34,7 +36,7 @@ def load_config(path: str | Path) -> SimulationConfig:
         seed                = data["simulation"]["seed"],
         sigma               = data["particles"]["sigma"],
         k_rep               = data["particles"]["k_rep"],
-        kT                  = data["particles"].get("kT", 1.0),  # yml -> get  kT get value, No value -> 1.0 by default
+        kT                  = data["particles"].get("kT", 1.0),  
         species             = data.get("species", []),
         attraction_rules    = data.get("attractions", []),
         reactions           = data.get("reactions", []),

@@ -1,9 +1,10 @@
-# Defines all interaction laws.
+# Pairwise intereaction forces and energies: 
+# steric repulsion, square-well attraction, and harmonic bonds between bound pairs
+
+
 import numpy as np
 from .types import AttractionRule
 
-# harmonic_repulsion — pushes overlapping particles apart (only when r < sigma)
-# harmonic_bond_force — spring between bound pairs (attractive when stretched, repulsive when compressed)
 
 def harmonic_repulsion(
         positions: np.ndarray,
@@ -13,16 +14,16 @@ def harmonic_repulsion(
         k_rep: float,
         ) -> np.ndarray:
     """
-    Soft harmonic repulsion between overlapping paris.
-    F = k_rep * (sigma - r) * r_hat if r < sigma, else 0
+    Soft harmonic repulsion between overlapping pairs.
+    F = k_rep * (sigma - r) * r_hat  if r < sigma, else 0.
 
     Parameters
-    -----------
+    ----------
     positions : (N, 3)
     pairs     : (M, 2) index pairs from neighbors.py
-    deltas    : (M, 3) displacement vector r_j - r_i (minimum image)
+    deltas    : (M, 3) minimum-image displacement r_j - r_i
     sigma     : particle diameter (overlap threshold)
-    k-rep     : repulsion spring constant
+    k_rep     : repulsion spring constant
 
     Returns
     -------
@@ -63,7 +64,10 @@ def harmonic_bond_force(
         ) -> np.ndarray:
     """
     Harmonic spring between bound pairs.
-    F = k_bond * (r - r_bond) * r_hat (attractive if r > r_bond, repulsive if r < r_bond)
+    F = k_bond * (r - r_bond) * r_hat  (attractive if stretched, repulsive if compressed).
+
+    Computes its own deltas from positions rather than reusing the neighbor-list
+    deltas, because bound pairs may be stretched beyond the neighbor cutoff.
     """
     forces = np.zeros_like(positions)
 
@@ -99,7 +103,11 @@ def pair_energy_bond(
         k_bond: float,
         r_bond: float,     
         ) -> float:
-    """ Total bond energy : U = 0.5 * k_bond * (r - r_bond)^2 summed over bound pairs. """
+    """Total bond energy : U = 0.5 * k_bond * (r - r_bond)^2 summed over bound pairs.
+
+        - bond force computes its own deltas from positions (not the neighbor-list deltas), 
+        because bound pairs may be outside the neighbor cutoff if they get stretched.
+    """
     if len(bound_pairs) == 0:
         return 0.0
     
@@ -107,9 +115,6 @@ def pair_energy_bond(
     deltas = positions[pairs[:, 1]] - positions[pairs[:, 0]]
     deltas -= box_length * np.round(deltas / box_length)
     dist = np.linalg.norm(deltas, axis = 1) 
-
-    # bond force computes its own deltas from positions (not the neighbor-list deltas), 
-    # because bound pairs may be outside the neighbor cutoff if they get stretched.
 
     return 0.5 * k_bond * np.sum((dist - r_bond) ** 2)
 
@@ -120,7 +125,7 @@ def pair_energy_repulsion(
         k_rep: float,
         ) -> float: 
     """
-    Total repulsive potential energy: U = 0.5 * k_rep * (sigma - r)^2
+    Total repulsive potential energy: U = 0.5 * k_rep * (sigma - r)^2 over overlapping pairs.
     """
 
     if len(pairs) == 0:
@@ -194,7 +199,7 @@ def pair_energy_attraction(
         rules: list[AttractionRule],
         species_names: list[str],
     ) -> float:
-    """ Total attractive potential energy: U = -epsilon per attracted pair."""
+    """Total attractive potential energy: U = - epsilon per pair inside the well."""
 
     if len(pairs) == 0:
         return 0.0

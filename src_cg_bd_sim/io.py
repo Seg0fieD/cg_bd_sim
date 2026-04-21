@@ -1,7 +1,7 @@
-# HDF5 trajectroy I/O
-# support two storage formats for bound_pairs history : 
-#  - "sparse" : flat edge list + offsets (compact, recommended)
-#  - "dense"  : (n_snapshots, N, N) boolean adjacency (simple but vast)
+# HDF5 trajectory I/O.
+# Bound-pair history has two storage formats:
+#   "sparse": flat edge list + per-frame offsets (compact, default)
+#   "dense":  (n_snapshots, N, N) boolean adjacency (simple but large)
 
 # pyright: reportGeneralTypeIssues=false
 
@@ -52,7 +52,6 @@ def save_trajectory(
         species_names = [s["name"] for s in cfg.species] if cfg.species else["A"]
         m.attrs["species_names"] = np.array(species_names, dtype="S")
         
-        # core arrays 
         f.create_dataset("times", data = np.array(state.times, dtype = float))        
         f.create_dataset("species_ids", data = state.species_ids.astype(np.int32) )
         f.create_dataset("initial_positions", data = state.initial_positions.astype(np.float32))
@@ -67,6 +66,7 @@ def save_trajectory(
 
 
         # bound_pairs history 
+        # sparse
         if fmt == "sparse":
             offsets = [0]
             edges_list = []
@@ -84,8 +84,8 @@ def save_trajectory(
                              compression = "gzip", compression_opts = 4)
             f.create_dataset("bound_offsets", 
                              data = np.array(offsets, dtype = np.int64))
-                
-        else:  # --- dense ---
+        # dense
+        else:  
             adj = np.zeros((n_snap, n_particles, n_particles), dtype = bool)
             for t, pairs in enumerate(state.saved_bound_pairs):
                 for (i, j) in pairs:
@@ -98,7 +98,7 @@ def save_trajectory(
 
 def load_trajectory(path : str | Path) -> dict:
     """
-    Read trajectory back. Returns dict with keys:
+    Read trajectory back into a dict. Returns dict with keys:
         metadata (dict) , times species_ids, initial_position, positions,
         save_bound_pairs (list of set[tuple[int, int]])
     """
@@ -114,21 +114,22 @@ def load_trajectory(path : str | Path) -> dict:
         out["species_ids"]       = f["species_ids"][...]
         out["initial_positions"] = f["initial_positions"][...]  
         out["positions"]         = f["positions"][...]
+        # energies guard keeps older trajectory files (saved before this field) loadable
         out["energies"]          = f["energies"][...] if "energies" in f else np.zeros(0) 
-                                                        # this guard keeps old trajectory files(saved before this change) loadable
-
+                                                        
         fmt = meta.get("bound_format", "sparse")
         n_snap = out["positions"].shape[0]
         saved_pairs: list[set[tuple[int, int]]] = []
 
+        # sparse
         if fmt == "sparse" or fmt == b"sparse":
             edges   = f["bound_edges"][...]
             offsets = f["bound_offsets"][...]
             for t in range(n_snap):
                 block = edges[offsets[t]:offsets[t + 1]]
                 saved_pairs.append({(int(i), int(j)) for (i, j) in block})
-
-        else:  # --- Dense ---
+        # dense
+        else:  
             adj = f["bound_adjacency"][...]
             for t in range(n_snap):
                 ii, jj = np.where(np.triu(adj[t], k = 1))
