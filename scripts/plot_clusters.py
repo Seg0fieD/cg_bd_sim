@@ -1,5 +1,5 @@
-# Cluster & Bond  statistics: size histogram (final snapshot),
-# cluster lifetime, bond lifetimes.
+# Cluster & Bond  statistics: 
+# size histogram (final snapshot),cluster lifetime, bond lifetimes.
 
 import argparse
 from pathlib import Path

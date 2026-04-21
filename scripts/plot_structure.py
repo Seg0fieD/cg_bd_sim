@@ -1,4 +1,5 @@
-# Spatial observables: radial distribution function g(r) per species pair 
+# Spatial observables: 
+# radial distribution function g(r) per species pair 
 # and static structures faccor S(q). Average over the last few snapshots
 # to reduce single-frame noise. 
 
@@ -33,7 +34,7 @@ def main() -> None:
     n_avg         = min(args.n_avg, n_snap)
     frames        = positions_all[-n_avg:]              # average over last n_avg frames 
 
-    # ------- g(r) for each unique species -------
+    #  g(r) for each unique species 
     pairs  = [(i, j) for i in range(n_species) for j in range(i, n_species)]
     gr_results: dict[tuple[int, int], tuple[np.ndarray, np.ndarray]] = {}
     for (a, b) in pairs: 
@@ -49,7 +50,7 @@ def main() -> None:
         g_avg = g_accum / n_avg
         gr_results[(a, b)] = (r_centers, g_avg)
 
-    # ------ S(q) averaged -------
+    # S(q) average
     q_centers = None
     S_accum   = None
     for pos in frames:
@@ -57,7 +58,7 @@ def main() -> None:
         S_accum = S if S_accum is None else S_accum + S
     S_avg = S_accum / n_avg
 
-    # --------- Plot --------------
+    # plot
     fig, axes = plt.subplots(1, 2, figsize = (14, 9))
     fig.suptitle(f"Structure - {Path(args.input).name} (avg over last {n_avg} frames)", 
                  fontsize = 14)

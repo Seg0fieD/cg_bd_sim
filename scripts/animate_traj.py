@@ -1,6 +1,5 @@
 # Interactive 3D trajectory viewer (PyVista, GPU-accelerated).
-# Opens a native desktop window with time slider, cluster coloring,
-# bond overlay, and PBC box wireframe.
+# a GUI with a slider, PBC box wireframe, bond overlay and cluster coloring based on certain condition
 
 import argparse
 from pathlib import Path
@@ -10,12 +9,12 @@ from src_cg_bd_sim.io import load_trajectory
 from src_cg_bd_sim.observables import _clusters_from_pairs
 
 
-# ----- tunables ---------------------------------------------------------
-PARTICLE_RADIUS = 0.4  # sphere radius (in simulation units)
-BOND_RADIUS = 0.08  # tube radius for bond cylinders
+# ----- tunables ---------------------------------------------
+PARTICLE_RADIUS = 0.4               # radius of sphere 
+BOND_RADIUS = 0.08                  # radius of stick/tubes bond's cylindrical shape
 MONOMER_COLOR = "#777777"
 BG_COLOR = "#101014"
-# ------------------------------------------------------------------------
+# -------------------------------------------------------------
 
 
 def build_bond_lines(

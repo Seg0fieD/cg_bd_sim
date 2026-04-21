@@ -1,4 +1,4 @@
-# run from terminal 
+
 
 import argparse
 from pathlib import Path

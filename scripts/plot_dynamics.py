@@ -1,5 +1,6 @@
-# Time-series observables : MSD, MSD split by bound/free, bound fraction,
-# position autocorrelation. All share time on X-axis.
+# Time-series observables : 
+# MSD, MSD split by bound/free, bound fraction,position autocorrelation. 
+# All share time on X-axis.
 
 import argparse
 from pathlib import Path
@@ -38,13 +39,13 @@ def main() -> None:
     n_particles = int(meta["n_particles"])
     D = float(meta["diffusion"])
 
-    # ---- compute ----
+    # computations
     msd = compute_msd(saved_positions_unwrapped, initial)
     msd_b, msd_f = compute_msd_split_bound_free(saved_positions_unwrapped, saved_bound_pairs, initial, n_particles)
     frac = compute_bound_fraction(saved_bound_pairs, n_particles)
     C = compute_position_autocorrelation(saved_positions)
 
-    # ---- plot -----
+    # plots
     fig, axes = plt.subplots(2, 3, figsize=(24, 12))
     fig.suptitle(f"Dynamics - {Path(args.input).name}", fontsize = 14)
 
