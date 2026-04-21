@@ -1,4 +1,4 @@
-# We shall test the neighbours of the particle or protein here
+# We shall test the neighbours of the particle 
 
 import numpy as np
 from src_cg_bd_sim.neighbors import find_neighbor_pairs, compute_displacement_vectors

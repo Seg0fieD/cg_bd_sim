@@ -1,4 +1,4 @@
-# # we shall test the reactions here 
+# we shall test the reactions here 
 import numpy as np 
 import pytest 
 from src_cg_bd_sim.config import load_config
