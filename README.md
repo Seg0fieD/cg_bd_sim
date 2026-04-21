@@ -1,6 +1,6 @@
-# cg_bd_sim
+# coarse-grained Brownian dynamics simulator
 
-A coarse-grained Brownian dynamics simulator for protein-like particles in 3D. Particles diffuse in a periodic box, interact through soft repulsion and species-specific attraction, and can form transient bonds via rule-based binding/unbinding. Produces HDF5 trajectories and report-quality plots of dynamic, structural, and cluster observables.
+A coarse-grained Brownian dynamics simulator for molecular particles in 3D. Particles diffuse in a periodic box, interact through soft repulsion and species-specific attraction, and can form transient bonds via rule-based binding/unbinding. Produces HDF5 trajectories and report-quality plots of dynamic, structural, and cluster observables.
 
 ## Physics
 
