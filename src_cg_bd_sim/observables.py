@@ -1,13 +1,3 @@
-# Everything you want to measure.
-# Start with:
-# mean squared displacement
-# radial distribution function
-# number of bound pairs
-# cluster size distribution
-# center-of-mass trajectories
-# total pair energy
-# These will become your plots and report results.
-
 # =======================================================================================
 # Observables — pure functions on saved trajectory data.
 # Chunk A: time-series observables (MSD, bound fraction, position autocorrelation)

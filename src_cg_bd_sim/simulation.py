@@ -90,8 +90,8 @@ class Simulation:
                     box_length   = self.cfg.box_length,
                     k_bond       = rule.k_bond,
                     r_bond       = rule.r_bond,
-                )   # Note:- if multiple reaction rules with different k_bond/r_bond exist,
-                    # this applies them all to every bound pair  - fine for one rule, refine later. 
+                )   # if multiple reaction rules with different k_bond/r_bond exist,
+                    # this applies them all to every bound pair
 
             # reaction updates (use current pairs + deltas for binding)
             if self.reaction_rules:

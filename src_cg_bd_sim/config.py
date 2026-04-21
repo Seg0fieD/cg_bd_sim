@@ -1,4 +1,3 @@
-# load the yaml config file 
 from dataclasses import dataclass, field
 from pathlib import Path
 import yaml

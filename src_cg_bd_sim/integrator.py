@@ -1,4 +1,4 @@
-# real physics for free diffusion Δr = √(2DΔtη) with η ~ N(0,1)
+# Real physics for free diffusion Δr = √(2DΔtη) with η ~ N(0,1)
 
 import numpy as np 
 from .boundaries import apply_periodic_boundary

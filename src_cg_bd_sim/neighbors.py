@@ -1,17 +1,4 @@
 # Neighbor list / near-pair detection.
-# Version 1:
-# rebuild neighbor structure every few steps
-# use cKDTree
-# generate close pairs within cutoff
-# SciPy’s cKDTree is a good fit for fast nearest-neighbor and radius-based lookup.
-# Interface idea:
-# pairs = find_neighbor_pairs(positions, cutoff, box)
-
-# Later:
-# custom cell lists for full performance
-# skin distance / Verlet-style updates
-# I would prefer to use this skin distance and verlet- styled update 
-
 
 import numpy as np 
 from scipy.spatial import KDTree

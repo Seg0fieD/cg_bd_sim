@@ -1,16 +1,4 @@
-# Defines interaction laws.
-# Start with:
-# Steric repulsion
-# hard-sphere-like approximation
-# or soft repulsion, e.g. harmonic overlap penalty
-# Short-range attraction
-# square well
-# Morse-like
-# simple patch attraction later
-# Functions:
-# compute_forces(state, pairs, params, box) -> forces
-# compute_pair_energy(...)
-
+# Defines all interaction laws.
 import numpy as np
 from .types import AttractionRule
 

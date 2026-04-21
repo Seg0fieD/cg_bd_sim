@@ -1,5 +1,3 @@
-# helper functions 
-
 from datetime import datetime
 from pathlib import Path
 

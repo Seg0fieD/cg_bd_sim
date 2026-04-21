@@ -1,38 +1,12 @@
 # Handles binding/unbinding.
 # Two modes:
 # A. Pure force-based sticking
-# attractive potential only
 # B. Rule-based reaction
-# if compatible particles are within reaction radius, bind with probability
-# bound pairs can unbind with another probability
-# For your project, rule-based binding is excellent because it is easy to explain scientifically.
-# Example:
-# if dist < r_bind and species match:
-#     bind with probability p_on * dt
-# if bound:
-#     unbind with probability p_off * dt
 
 
 import numpy as np
-#from dataclasses import dataclass, field
 from .types import ReactionRule
 from .state import SimulationState
-
-# @dataclass 
-# class SimulationConfig:
-#     n_particles: int 
-#     dt: float 
-#     n_steps: int 
-#     diffusion: float 
-#     box_length: float
-#     save_entry: int 
-#     seed: int 
-#     sigma: float
-#     k_rep: float
-#     kT: float 
-#     species: list[dict] = field(default_factory = list)
-#     attraction_rules: list[dict] = field(default_factory = list)
-#     reactions: list[dict] = field(default_factory = list)                 
 
 
 def _canonical(i : int, j: int ) -> tuple[int, int]:
@@ -56,7 +30,8 @@ def attempt_binding(
     
     dist = np.linalg.norm(deltas, axis = 1)
 
-    # particle already bound (on either side) are locked - one-partner binding xxxxxxxxxxxxxxx
+    # - x - x - x - x - x - x - x - x - x - x
+    # particle already bound (on either side) are locked - one-partner binding 
     # locked = set()
     # for (a, b) in state.bound_pairs:
     #     locked.add(a)
@@ -91,7 +66,7 @@ def attempt_binding(
     #             locked.add(i)
     #             locked.add(j)
 
-    # xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    # - x - x - x - x - x - x - x - x - x - x
     # count existing partners per particle 
     partner_count: dict[int, int] = {}
     for (a, b) in state.bound_pairs:
@@ -115,7 +90,7 @@ def attempt_binding(
 
         candidates = pairs[mask]
         p_bind = rule.k_on * dt
-        cap = rule.max_partners         # 0 = unlimited 
+        cap = rule.max_partners         
 
         for (i, j) in candidates:
             i, j = int(i), int(j)

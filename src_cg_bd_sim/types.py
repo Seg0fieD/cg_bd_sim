@@ -1,11 +1,4 @@
-# types.py
 # Small dataclasses for static metadata only.
-# Example:
-# Species
-# Box
-# SimulationParams
-# ReactionRule
-# Do not put per-step heavy logic here.
 
 from dataclasses import dataclass
 
